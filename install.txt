@@ -1,0 +1,115 @@
+Install Raspbian
+Download standard image and unzip
+https://www.raspberrypi.org/downloads/
+
+Write to sd card via mac
+sudo dd bs=1m if=2018-06-27-raspbian-stretch-lite.img of=/dev/rdisk2 conv=sync
+
+Enable ssh on the Pi
+cd /Volumes/boot/
+touch ssh
+
+Insert sd card in RPi and boot.
+
+Set static IP address on router.
+
+Test login via ssh
+ssh pi@192.168.0.15
+password: raspberry
+passwd: nimdaWM
+sudo raspi-config
+
+sudo apt-get update
+sudo apt-get upgrade
+Configure Hifiberry Digi+ and ALSA
+
+Hifiberry Config
+sudo vi /boot/config.txt
+Replace:
+dtparam=audio=on
+With:
+dtparam=audio=off
+dtoverlay=hifiberry-digi
+dtparam=i2c_arm=on
+dtparam=i2s=on
+max_usb_current=1
+
+sudo reboot
+
+test with:
+aplay -l
+aplay a_music_file.wav
+
+(see instructions and expected output at https://www.hifiberry.com/build/documentation/configuring-linux-3-18-x/)
+
+Install and Configure MPD
+See https://www.musicpd.org/doc/html/user.html#chapter-3-configuration
+
+sudo apt-get update
+sudo apt-get install mpd
+sudo apt-get install mpc
+
+sudo vi /etc/mpd.conf
+check/edit input, audio_output and decoder
+
+Map to music database on NAS (not necessary for UPnP)
+sudo mkdir /mnt/Diskstation
+
+sudo vi /etc/systemd/system/mnt-Diskstation.mount
+[Unit]
+  Description=cifs mount script
+  Requires=network-online.target
+  After=network-online.service
+
+[Mount]
+  What=//192.168.0.10/music
+  Where=/mnt/Diskstation
+  Options=username=william,password=jess97pass,rw
+  Type=cifs
+
+[Install]
+  WantedBy=multi-user.target
+
+sudo systemctl enable mnt-Diskstation.mount
+sudo ln -s /mnt/Diskstation /var/lib/mpd/music/Diskstation
+sudo mpc update
+
+Test with mpc add/play or MPDroid
+
+Tools:
+sudo systemctl restart mpd
+
+Install and Configure upmpdcli
+See https://www.lesbonscomptes.com/upmpdcli/upmpdcli-manual.html
+
+sudo vi /etc/apt/sources.list.d/upmpdcli.list
+o
+deb http://www.lesbonscomptes.com/upmpdcli/downloads/raspbian/ stretch main
+deb-src http://www.lesbonscomptes.com/upmpdcli/downloads/raspbian/ stretch main
+
+sudo apt-get update
+sudo apt-get install upmpdcli
+sudo apt-get install upmpdcli-qobuz
+sudo reboot
+
+sudo vi /etc/upmpdcli.conf
+friendlyname =
+(qobuz parameters)
+
+Install Minim Server (optional)
+http://minimserver.com/install-raspbian.html
+
+sudo apt-get install oracle-java8-jdk
+
+Download Minim server and rsync to pi home directory…
+tar xf MinimServer-0.8.5.2-linux-armhf.tar.gz
+minimserver/bin/setup
+(auto startup)
+
+minimserver/bin/startc
+/mnt/Diskstation
+
+Notes
+Kazoo control point supports upmpdcli media server and access to Qobuz
+
+Diskstation is accessed via OpenHome Media Server (not via mpd database, so the diskstation mount is only for testing).

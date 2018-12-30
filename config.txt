@@ -1,0 +1,9 @@
+# 2018-09-06 WM
+
+dtparam=i2c_arm=on
+dtparam=i2s=on
+
+max_usb_current=1
+
+dtparam=audio=off
+dtoverlay=hifiberry-digi
